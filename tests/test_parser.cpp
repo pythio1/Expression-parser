@@ -40,6 +40,19 @@ void expectThrows(const std::string& what, const std::string& input) {
         // ok
     }
 }
+void expectThrowsEval(const std::string& what, const std::string& input) {
+    ++g_total;
+    try {
+        expr::Lexer lx(input);
+        expr::Parser p(lx.tokenize());
+        auto ast = p.parse();
+        (void)expr::evaluate(*ast, nullptr);
+        ++g_failures;
+        std::cerr << "[FAIL] " << what << ": expected throw on eval, got success\n";
+    } catch (const std::exception&) {
+        // ok
+    }
+}
 
 std::string parseSExpr(const std::string& input) {
     expr::Lexer lx(input);
@@ -106,13 +119,18 @@ int main() {
     expectThrows("empty",         "");
     expectThrows("unmatched (",   "(1+2");
     expectThrows("unmatched )",   "1+2)");
-    expectThrows("double op",     "1++2");
     expectThrows("bad char",      "1 $ 2");
     expectThrows("trailing jumk", "1 2");
-    expectThrows("div by zero",   "1/0");
     expectThrows("decimal alone", "1.");
     expectThrows("only plus",     "+");
+    // 1++2 и 1--2 — валидные выражения (унарный +/-, как в C/C++)
+    expectEq("1++2 = 1+(+2)",     parseEval("1++2"),  3.0);
+    expectEq("1--2 = 1-(-2)",     parseEval("1--2"),  3.0);
+    expectEq("1+-2",              parseEval("1+-2"), -1.0);
+    expectEq("1-+2",              parseEval("1-+2"), -1.0);
 
+    // деление на ноль — ошибка этапа вычисления, не парсинга
+    expectThrowsEval("div by zero", "1/0");
     if (g_failures == 0) {
         std::cout << "All " << g_total << " tests passed.\n";
         return 0;
