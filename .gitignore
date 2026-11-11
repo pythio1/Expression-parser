@@ -1,0 +1,22 @@
+# Operating system files
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini
+
+# Local editor files
+*.swp
+*.swo
+*~
+
+# Make and CMake build artifacts
+*.o
+/expr_cli
+/expr_tests
+/build/
+/cmake-build-*/
+/CMakeFiles/
+/CMakeCache.txt
+/cmake_install.cmake
+/CTestTestfile.cmake
+/Testing/
